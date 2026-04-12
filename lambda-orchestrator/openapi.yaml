@@ -1,0 +1,338 @@
+openapi: 3.0.3
+info:
+  title: Lambda Orchestrator API
+  version: 1.0.0
+  description: |
+    API del orquestador B2B para crear y confirmar pedidos en una sola operacion.
+
+servers:
+  - url: http://localhost:3004
+    description: Local serverless-offline (ajustable por OFFLINE_HTTP_PORT)
+
+paths:
+  /orchestrator/create-and-confirm-order:
+    post:
+      summary: Crear y confirmar orden
+      description: |
+        Orquesta secuencialmente la validacion de cliente, creacion de orden y confirmacion con idempotencia.
+      operationId: createAndConfirmOrder
+      tags:
+        - Orchestrator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrchestratorRequest'
+            examples:
+              default:
+                summary: Ejemplo de request
+                value:
+                  customer_id: 1
+                  items:
+                    - product_id: 2
+                      qty: 3
+                  idempotency_key: abc-123
+                  correlation_id: req-789
+      responses:
+        '201':
+          description: Orden confirmada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                success:
+                  summary: Ejemplo de respuesta exitosa
+                  value:
+                    success: true
+                    correlationId: req-789
+                    data:
+                      customer:
+                        id: 1
+                        name: ACME
+                        email: ops@acme.com
+                        phone: "..."
+                      order:
+                        id: 101
+                        status: CONFIRMED
+                        total_cents: 459900
+                        items:
+                          - product_id: 2
+                            qty: 3
+                            unit_price_cents: 153300
+                            subtotal_cents: 459900
+        '400':
+          description: Error de validacion de entrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  value:
+                    success: false
+                    correlationId: req-789
+                    error:
+                      code: VALIDATION_ERROR
+                      message: customer_id number must be greater than 0
+                      step: validate_input
+        '404':
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                customer_not_found:
+                  value:
+                    success: false
+                    correlationId: req-789
+                    error:
+                      code: NOT_FOUND
+                      message: Customer with id 1 not found
+                      step: validate_customer
+        '409':
+          description: Conflicto de idempotencia o estado de orden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                already_confirmed:
+                  value:
+                    success: false
+                    correlationId: req-789
+                    error:
+                      code: CONFLICT
+                      message: Order already confirmed
+                      step: confirm_order
+        '422':
+          description: Error de negocio al crear la orden (por ejemplo, stock insuficiente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                insufficient_stock:
+                  value:
+                    success: false
+                    correlationId: req-789
+                    error:
+                      code: UNPROCESSABLE
+                      message: Insufficient stock
+                      step: create_order
+        '503':
+          description: Dependencia no disponible (Customers API u Orders API)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                customers_api_unavailable:
+                  value:
+                    success: false
+                    correlationId: req-789
+                    error:
+                      code: SERVICE_UNAVAILABLE
+                      message: Customers API unavailable
+                      step: validate_customer
+                orders_api_unavailable:
+                  value:
+                    success: false
+                    correlationId: req-789
+                    error:
+                      code: SERVICE_UNAVAILABLE
+                      message: Orders API unavailable
+                      step: create_order
+        '500':
+          description: Error interno no controlado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                internal_error:
+                  value:
+                    success: false
+                    correlationId: req-789
+                    error:
+                      code: INTERNAL_ERROR
+                      message: Internal server error
+                      step: null
+
+components:
+  schemas:
+    OrchestratorRequest:
+      type: object
+      required:
+        - customer_id
+        - items
+        - idempotency_key
+      properties:
+        customer_id:
+          type: integer
+          minimum: 1
+          example: 1
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderItemInput'
+        idempotency_key:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: abc-123
+        correlation_id:
+          type: string
+          example: req-789
+
+    OrderItemInput:
+      type: object
+      required:
+        - product_id
+        - qty
+      properties:
+        product_id:
+          type: integer
+          minimum: 1
+          example: 2
+        qty:
+          type: integer
+          minimum: 1
+          example: 3
+
+    Customer:
+      type: object
+      required:
+        - id
+        - name
+        - email
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: ACME
+        email:
+          type: string
+          format: email
+          example: ops@acme.com
+        phone:
+          type: string
+          nullable: true
+          example: '+57 300 0000000'
+
+    OrderItem:
+      type: object
+      required:
+        - product_id
+        - qty
+      properties:
+        product_id:
+          type: integer
+          example: 2
+        qty:
+          type: integer
+          example: 3
+        unit_price_cents:
+          type: integer
+          nullable: true
+          example: 153300
+        subtotal_cents:
+          type: integer
+          nullable: true
+          example: 459900
+
+    Order:
+      type: object
+      required:
+        - id
+        - status
+      properties:
+        id:
+          type: integer
+          example: 101
+        status:
+          type: string
+          example: CONFIRMED
+        total_cents:
+          type: integer
+          nullable: true
+          example: 459900
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+
+    SuccessData:
+      type: object
+      required:
+        - customer
+        - order
+      properties:
+        customer:
+          $ref: '#/components/schemas/Customer'
+        order:
+          $ref: '#/components/schemas/Order'
+
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        correlationId:
+          type: string
+          nullable: true
+          example: req-789
+        data:
+          $ref: '#/components/schemas/SuccessData'
+
+    ErrorDetail:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+            - NOT_FOUND
+            - CONFLICT
+            - UNPROCESSABLE
+            - SERVICE_UNAVAILABLE
+            - INTERNAL_ERROR
+        message:
+          type: string
+        step:
+          type: string
+          nullable: true
+          enum:
+            - validate_input
+            - validate_customer
+            - create_order
+            - confirm_order
+            - null
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        correlationId:
+          type: string
+          nullable: true
+          example: req-789
+        error:
+          $ref: '#/components/schemas/ErrorDetail'

@@ -1,0 +1,286 @@
+openapi: 3.0.3
+info:
+  title: Customers API
+  version: 1.0.0
+  description: Internal customers management API.
+servers:
+  - url: http://localhost:3001
+
+tags:
+  - name: Health
+  - name: Customers
+  - name: Internal
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Service health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, timestamp, service]
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  service:
+                    type: string
+                    example: customers-api
+
+  /customers:
+    post:
+      tags: [Customers]
+      summary: Create customer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+    get:
+      tags: [Customers]
+      summary: Search customers
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search by name or email
+        - in: query
+          name: cursor
+          schema:
+            type: string
+          description: Base64 encoded cursor
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated customers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchCustomersResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /customers/{id}:
+    get:
+      tags: [Customers]
+      summary: Get customer by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: Customer found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    put:
+      tags: [Customers]
+      summary: Update customer
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCustomerRequest'
+      responses:
+        '200':
+          description: Customer updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags: [Customers]
+      summary: Soft delete customer
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '204':
+          description: Customer deleted
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /internal/customers/{id}:
+    get:
+      tags: [Internal]
+      summary: Internal customer lookup
+      security:
+        - serviceTokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: Customer found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    serviceTokenAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: SERVICE_TOKEN
+
+  parameters:
+    CustomerId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+
+  responses:
+    UnauthorizedError:
+      description: Unauthorized request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ConflictError:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    Customer:
+      type: object
+      required: [id, name, email, phone, created_at]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    CreateCustomerRequest:
+      type: object
+      additionalProperties: false
+      required: [name, email, phone]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+
+    UpdateCustomerRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+
+    SearchCustomersResponse:
+      type: object
+      required: [data, nextCursor, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        nextCursor:
+          type: string
+          nullable: true
+        limit:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required: [code, message, details]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true

@@ -1,0 +1,130 @@
+{
+  "info": {
+    "name": "Customers API",
+    "_postman_id": "c8f8a2f2-2bc4-4de4-83fc-7a6e44f1b9a1",
+    "description": "Coleccion para Customers API (public + internal + health).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Create Customer",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Acme Corp\",\n  \"email\": \"contacto@acme.com\",\n  \"phone\": \"+54-11-1234-5678\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/customers",
+          "host": ["{{base_url}}"],
+          "path": ["customers"]
+        }
+      }
+    },
+    {
+      "name": "Get Customer By Id",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/customers/{{customer_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["customers", "{{customer_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Search Customers",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/customers?search={{search}}&limit={{limit}}&cursor={{cursor}}",
+          "host": ["{{base_url}}"],
+          "path": ["customers"],
+          "query": [
+            { "key": "search", "value": "{{search}}" },
+            { "key": "limit", "value": "{{limit}}" },
+            { "key": "cursor", "value": "{{cursor}}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Update Customer",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Acme Corp Updated\",\n  \"phone\": \"+54-11-9999-0000\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/customers/{{customer_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["customers", "{{customer_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Delete Customer",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/customers/{{customer_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["customers", "{{customer_id}}"]
+        }
+      }
+    },
+    {
+      "name": "Internal Get Customer",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{service_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/internal/customers/{{customer_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["internal", "customers", "{{customer_id}}"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3001" },
+    { "key": "jwt_token", "value": "" },
+    { "key": "service_token", "value": "internal-service-token-secret" },
+    { "key": "customer_id", "value": "1" },
+    { "key": "search", "value": "acme" },
+    { "key": "limit", "value": "20" },
+    { "key": "cursor", "value": "" }
+  ]
+}

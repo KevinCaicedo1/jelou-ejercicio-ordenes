@@ -1,0 +1,45 @@
+{
+  "name": "customers-api",
+  "version": "1.0.0",
+  "description": "Customers API for Backoffice B2B",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "build": "echo \"No build step required for JavaScript\"",
+    "dev": "node --watch src/index.js",
+    "start": "node dist/index.js",
+    "migrate": "node src/infrastructure/database/migrate.js",
+    "seed": "node src/infrastructure/database/seed.js",
+    "test": "jest --runInBand",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.js"
+  },
+  "keywords": [
+    "customers",
+    "api",
+    "express",
+    "mysql"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "jest": "^29.7.0",
+    "prettier": "^3.3.3",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/domain/interfaces/**/*.js"
+    ]
+  }
+}

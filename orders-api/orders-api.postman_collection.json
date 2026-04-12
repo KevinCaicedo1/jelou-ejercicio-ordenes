@@ -1,0 +1,302 @@
+{
+  "info": {
+    "name": "Orders API",
+    "_postman_id": "2d5f6f0b-8d42-4c31-90d4-9f89d6e2a001",
+    "description": "Coleccion Postman para probar Orders API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwtToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3002"
+    },
+    {
+      "key": "jwtToken",
+      "value": ""
+    },
+    {
+      "key": "serviceToken",
+      "value": "internal-service-token-secret"
+    },
+    {
+      "key": "productId",
+      "value": "1"
+    },
+    {
+      "key": "orderId",
+      "value": "1"
+    },
+    {
+      "key": "customerId",
+      "value": "1"
+    },
+    {
+      "key": "idempotencyKey",
+      "value": "2f6c5a37-9677-4d95-8ed6-4f1d8a57aa11"
+    },
+    {
+      "key": "cursor",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      }
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"SKU-1001\",\n  \"name\": \"Keyboard Mechanical\",\n  \"price_cents\": 199900,\n  \"stock\": 25\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price_cents\": 189900,\n  \"stock\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Product By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products?search=&cursor={{cursor}}&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": {{customerId}},\n  \"items\": [\n    {\n      \"product_id\": {{productId}},\n      \"qty\": 2\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders?status=&from=&to=&cursor={{cursor}}&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "key": "from",
+                  "value": ""
+                },
+                {
+                  "key": "to",
+                  "value": ""
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Confirm Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Idempotency-Key",
+                "value": "{{idempotencyKey}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "confirm"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "cancel"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

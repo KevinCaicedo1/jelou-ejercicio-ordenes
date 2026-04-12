@@ -1,0 +1,89 @@
+﻿services:
+  mysql:
+    image: mysql:8.0
+    container_name: jelou-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-psecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  customers-api:
+    build:
+      context: ./customers-api
+    container_name: jelou-customers-api
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: customers_db
+      DB_USER: root
+      DB_PASSWORD: secret
+      JWT_SECRET: supersecretkey
+      JWT_EXPIRES_IN: 1h
+      SERVICE_TOKEN: internal-service-token-secret
+    ports:
+      - "3001:3001"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  orders-api:
+    build:
+      context: ./orders-api
+    container_name: jelou-orders-api
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: orders_db
+      DB_USER: root
+      DB_PASSWORD: secret
+      JWT_SECRET: supersecretkey
+      JWT_EXPIRES_IN: 1h
+      SERVICE_TOKEN: internal-service-token-secret
+      CUSTOMERS_API_BASE_URL: http://customers-api:3001
+      CUSTOMERS_SERVICE_TOKEN: internal-service-token-secret
+    ports:
+      - "3002:3002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      customers-api:
+        condition: service_started
+
+  lambda-orchestrator:
+    build:
+      context: ./lambda-orchestrator
+    container_name: jelou-lambda-orchestrator
+    environment:
+      NODE_ENV: development
+      CUSTOMERS_API_BASE_URL: http://customers-api:3001
+      ORDERS_API_BASE_URL: http://orders-api:3002
+      SERVICE_TOKEN: internal-service-token-secret
+      JWT_SECRET: supersecretkey
+      OFFLINE_HTTP_PORT: 3000
+      OFFLINE_LAMBDA_PORT: 3003
+    ports:
+      - "3000:3000"
+      - "3003:3003"
+    depends_on:
+      customers-api:
+        condition: service_started
+      orders-api:
+        condition: service_started
+
+volumes:
+  mysql_data:
+

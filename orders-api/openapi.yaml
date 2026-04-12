@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  title: Orders API
+  version: 1.0.0
+servers:
+  - url: http://localhost:3002
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        sku:
+          type: string
+        name:
+          type: string
+        price_cents:
+          type: integer
+        stock:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        order_id:
+          type: integer
+        product_id:
+          type: integer
+        qty:
+          type: integer
+        unit_price_cents:
+          type: integer
+        subtotal_cents:
+          type: integer
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        status:
+          type: string
+          enum: [CREATED, CONFIRMED, CANCELED]
+        total_cents:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+        canceled_at:
+          type: string
+          format: date-time
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              nullable: true
+security:
+  - bearerAuth: []
+paths:
+  /products:
+    post:
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sku, name, price_cents, stock]
+              properties:
+                sku:
+                  type: string
+                name:
+                  type: string
+                price_cents:
+                  type: integer
+                stock:
+                  type: integer
+      responses:
+        '201':
+          description: Created
+        '409':
+          description: SKU conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List products
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Product page
+  /products/{id}:
+    get:
+      summary: Get product by id
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Product
+        '404':
+          description: Not found
+    patch:
+      summary: Update product
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                price_cents:
+                  type: integer
+                stock:
+                  type: integer
+      responses:
+        '200':
+          description: Updated
+        '404':
+          description: Not found
+  /orders:
+    post:
+      summary: Create order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [customer_id, items]
+              properties:
+                customer_id:
+                  type: integer
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [product_id, qty]
+                    properties:
+                      product_id:
+                        type: integer
+                      qty:
+                        type: integer
+      responses:
+        '201':
+          description: Created
+        '404':
+          description: Customer not found
+        '422':
+          description: Validation or stock issue
+    get:
+      summary: List orders
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [CREATED, CONFIRMED, CANCELED]
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Order page
+  /orders/{id}:
+    get:
+      summary: Get order by id
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Order with items
+        '404':
+          description: Not found
+  /orders/{id}/confirm:
+    post:
+      summary: Confirm order (idempotent)
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: X-Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Confirmed order
+        '409':
+          description: Invalid order state
+  /orders/{id}/cancel:
+    post:
+      summary: Cancel order
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Canceled order
+        '409':
+          description: Cancel not allowed

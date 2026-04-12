@@ -14,7 +14,7 @@ Este repositorio esta preparado para levantar todos los servicios con un solo co
 
 - customers-api: http://localhost:3001/health
 - orders-api: http://localhost:3002/health
-- lambda-orchestrator: http://localhost:3004/orchestrator/create-and-confirm-order
+- lambda-orchestrator: http://localhost:3000/orchestrator/create-and-confirm-order
 
 3. Detener servicios:
 

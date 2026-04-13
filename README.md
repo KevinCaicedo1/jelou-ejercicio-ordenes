@@ -108,7 +108,14 @@ Cada servicio incluye su propia Postman Collection dentro de su carpeta:
 
 - customers-api: customers-api/postman-collection.json
 - orders-api: orders-api/orders-api.postman_collection.json
-- lambda-orchestrator: lambda-orchestrator se encuentra dentro de la collection de orders-api, ya que depende de ambos servicios.
+- lambda-orchestrator: se encuentra dentro de una carpeta en la collection de orders-api, ya que depende de ambos servicios.
+
+Tambien se creo la carpeta POSTMAN-APIS-AWS con collections listas para usar contra endpoints publicos de AWS:
+
+- POSTMAN-APIS-AWS/Customers API.postman_collection.json
+- POSTMAN-APIS-AWS/Orders API.postman_collection.json
+
+En la collection de Orders API (AWS) tambien esta incluida la carpeta de Lambda para invocar el endpoint del orquestador en API Gateway.
 
 Recomendacion:
 
@@ -154,4 +161,5 @@ Luego invocar usando API Gateway:
 - customers-api
 - orders-api
 - lambda-orchestrator
+- POSTMAN-APIS-AWS
 - db

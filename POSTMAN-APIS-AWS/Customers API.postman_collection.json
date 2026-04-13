@@ -195,7 +195,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:3001"
+      "value": "http://ec2-98-81-164-242.compute-1.amazonaws.com:3001"
     },
     {
       "key": "jwt_token",
@@ -215,7 +215,7 @@
     },
     {
       "key": "limit",
-      "value": "20"
+      "value": "1"
     },
     {
       "key": "cursor",

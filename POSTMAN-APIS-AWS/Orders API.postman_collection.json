@@ -48,7 +48,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"price_cents\": 189900,\n  \"stock\": 30\n}"
+              "raw": "{\n  \"price_cents\": 189900,\n  \"stock\": 100\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/products/{{productId}}",
@@ -272,13 +272,17 @@
               }
             },
             "url": {
-              "raw": "http://localhost:3000/orchestrator/create-and-confirm-order",
-              "protocol": "http",
+              "raw": "https://0oiifhun64.execute-api.us-east-1.amazonaws.com/dev/orchestrator/create-and-confirm-order",
+              "protocol": "https",
               "host": [
-                "localhost"
+                "0oiifhun64",
+                "execute-api",
+                "us-east-1",
+                "amazonaws",
+                "com"
               ],
-              "port": "3000",
               "path": [
+                "dev",
                 "orchestrator",
                 "create-and-confirm-order"
               ]
@@ -347,7 +351,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3002"
+      "value": "http://ec2-98-81-164-242.compute-1.amazonaws.com:3002"
     },
     {
       "key": "jwtToken",
@@ -359,7 +363,7 @@
     },
     {
       "key": "productId",
-      "value": "6"
+      "value": "1"
     },
     {
       "key": "orderId",
@@ -371,7 +375,7 @@
     },
     {
       "key": "idempotencyKey",
-      "value": "2f6c5a37-9677-4d95-8ed6-4f1d8a57aa11"
+      "value": "abc-123"
     },
     {
       "key": "cursor",

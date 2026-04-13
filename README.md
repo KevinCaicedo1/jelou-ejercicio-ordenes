@@ -108,7 +108,7 @@ Cada servicio incluye su propia Postman Collection dentro de su carpeta:
 
 - customers-api: customers-api/postman-collection.json
 - orders-api: orders-api/orders-api.postman_collection.json
-- lambda-orchestrator: lambda-orchestrator (la invocacion se realiza sobre el endpoint documentado de API Gateway o serverless-offline)
+- lambda-orchestrator: lambda-orchestrator se encuentra dentro de la collection de orders-api, ya que depende de ambos servicios.
 
 Recomendacion:
 

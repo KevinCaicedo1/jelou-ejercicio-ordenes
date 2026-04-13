@@ -8,8 +8,6 @@
     "build": "echo \"No build step required for JavaScript\"",
     "dev": "node --watch src/index.js",
     "start": "node dist/index.js",
-    "migrate": "node src/infrastructure/database/migrate.js",
-    "seed": "node src/infrastructure/database/seed.js",
     "test": "jest --runInBand",
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.js"
